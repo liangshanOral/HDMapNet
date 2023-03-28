@@ -12,16 +12,20 @@ def get_proj_mat(intrins, rots, trans):
     T[:3, 3] = -trans
     RT = R @ T
     return K @ RT
+#和cv学的对上了，好奇妙(ps:三维坐标写成齐次式，所以维度是4)
 
 
 def perspective(cam_coords, proj_mat):
     pix_coords = proj_mat @ cam_coords
+    #相机坐标系转成了像素坐标系
     valid_idx = pix_coords[2, :] > 0
     pix_coords = pix_coords[:, valid_idx]
     pix_coords = pix_coords[:2, :] / (pix_coords[2, :] + 1e-7)
     pix_coords = pix_coords.transpose(1, 0)
     return pix_coords
 
+'''One-hot编码是一种将分类数据表示为数值数据的方法。它涉及将具有n个可能值的分类变量转换为n个二进制变量，每个变量表示原始变量的一个可能值。
+例如，如果我们有一个具有三个可能值的分类变量：“红色”，“绿色”和“蓝色”，我们可以使用三个二进制变量来表示它：[1,0,0]表示“红色”，[0,1,0]表示“绿色”，[0,0,1]表示“蓝色”。'''
 
 def label_onehot_decoding(onehot):
     return torch.argmax(onehot, axis=0)
