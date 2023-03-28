@@ -24,6 +24,12 @@ class HDMapNetDataset(Dataset):
         patch_w = data_conf['xbound'][1] - data_conf['xbound'][0]
         canvas_h = int(patch_h / data_conf['ybound'][2])
         canvas_w = int(patch_w / data_conf['xbound'][2])
+        '''这两行代码计算了画布的高度和宽度。`patch_h` 和 `patch_w` 分别表示 patch 的高度和宽度，`data_conf['ybound'][2]` 和 `data_conf['xbound'][2]` 分别表示 y 轴和 x 轴的分辨率。
+
+画布的高度和宽度是通过将 patch 的高度和宽度除以相应轴的分辨率来计算的。这样，画布的大小就可以根据 patch 的大小和分辨率自动调整。
+
+画布用于绘制地图。在 HDMapNet 模型中，地图被表示为一个二维数组，其中每个元素表示地图上一个小块区域的语义类别。画布的大小决定了地图的分辨率。'''
+        
         self.is_train = is_train
         self.data_conf = data_conf
         self.patch_size = (patch_h, patch_w)
@@ -59,19 +65,26 @@ class HDMapNetDataset(Dataset):
 
     def get_lidar(self, rec):
         lidar_data = get_lidar_data(self.nusc, rec, nsweeps=3, min_distance=2.2)
+        #激光雷达可以快速地进行多次扫描，从而获取周围环境的三维点云数据
         lidar_data = lidar_data.transpose(1, 0)
+        #(5,n)-(n,5) 5: x y z reflection rate other
         num_points = lidar_data.shape[0]
         lidar_data = pad_or_trim_to_np(lidar_data, [81920, 5]).astype('float32')
         lidar_mask = np.ones(81920).astype('float32')
         lidar_mask[num_points:] *= 0.0
+        #将掩码数组中多余的元素设为 0。这一步是为了保证掩码数组中只有前 num_points 个元素为 1，其余元素都为 0。
         return lidar_data, lidar_mask
 
     def get_ego_pose(self, rec):
         sample_data_record = self.nusc.get('sample_data', rec['data']['LIDAR_TOP'])
         ego_pose = self.nusc.get('ego_pose', sample_data_record['ego_pose_token'])
+        #姿态信息
         car_trans = ego_pose['translation']
+        #位置信息
         pos_rotation = Quaternion(ego_pose['rotation'])
+        #创建四元数表示ego旋转信息
         yaw_pitch_roll = pos_rotation.yaw_pitch_roll
+        #计算欧拉角
         return torch.tensor(car_trans), torch.tensor(yaw_pitch_roll)
 
     def sample_augmentation(self):
@@ -134,14 +147,18 @@ class HDMapNetDataset(Dataset):
             imgs.append(img)
 
             sens = self.nusc.get('calibrated_sensor', samp['calibrated_sensor_token'])
+            #校准传感器
             trans.append(torch.Tensor(sens['translation']))
             rots.append(torch.Tensor(Quaternion(sens['rotation']).rotation_matrix))
             intrins.append(torch.Tensor(sens['camera_intrinsic']))
+            #内参矩阵
         return torch.stack(imgs), torch.stack(trans), torch.stack(rots), torch.stack(intrins), torch.stack(post_trans), torch.stack(post_rots)
 
     def get_vectors(self, rec):
         location = self.nusc.get('log', self.nusc.get('scene', rec['scene_token'])['log_token'])['location']
+        #场景位置
         ego_pose = self.nusc.get('ego_pose', self.nusc.get('sample_data', rec['data']['LIDAR_TOP'])['ego_pose_token'])
+        #车辆具体信息
         vectors = self.vector_map.gen_vectorized_samples(location, ego_pose['translation'], ego_pose['rotation'])
         return vectors
 
@@ -172,7 +189,8 @@ class HDMapNetSemanticDataset(HDMapNetDataset):
         direction_masks = forward_oh_masks + backward_oh_masks
         direction_masks = direction_masks / direction_masks.sum(0)
         return semantic_masks, instance_masks, forward_masks, backward_masks, direction_masks
-
+    #这里不是很理解具体得到decoder的三种mask的原理
+    
     def __getitem__(self, idx):
         rec = self.samples[idx]
         imgs, trans, rots, intrins, post_trans, post_rots = self.get_imgs(rec)
