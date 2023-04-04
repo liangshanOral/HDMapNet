@@ -19,13 +19,18 @@ def get_patch_coord(patch_box, patch_angle=0.0):
     patch = affinity.rotate(patch, patch_angle, origin=(patch_x, patch_y), use_radians=False)
 
     return patch
-
+'''get_patch_coord函数的作用是获取一个矩形区域的坐标。
+在HDMap中，可能需要将地图分成若干个小块，每个小块对应一个矩形区域。
+get_patch_coord函数可以根据输入的矩形区域左上角坐标、高度和宽度，
+计算出矩形区域的四个顶点坐标，然后将其转换为一个shapely库中的box对象，
+最后可以根据需要对矩形区域进行旋转等操作。这样，可以方便地对地图进行分块处理，
+从而提高地图处理的效率。'''
 
 def get_discrete_degree(vec, angle_class=36):
     deg = np.mod(np.degrees(np.arctan2(vec[1], vec[0])), 360)
     deg = (int(deg / (360 / angle_class) + 0.5) % angle_class) + 1
     return deg
-
+#将一个向量转换为离散的角度值
 
 def mask_for_lines(lines, mask, thickness, idx, type='index', angle_class=36):
     coords = np.asarray(list(lines.coords), np.int32)
@@ -47,7 +52,7 @@ def mask_for_lines(lines, mask, thickness, idx, type='index', angle_class=36):
 def line_geom_to_mask(layer_geom, confidence_levels, local_box, canvas_size, thickness, idx, type='index', angle_class=36):
     patch_x, patch_y, patch_h, patch_w = local_box
 
-    patch = get_patch_coord(local_box)
+    patch = get_patch_coord(local_box)c
 
     canvas_h = canvas_size[0]
     canvas_w = canvas_size[1]
@@ -75,7 +80,7 @@ def line_geom_to_mask(layer_geom, confidence_levels, local_box, canvas_size, thi
             else:
                 map_mask, idx = mask_for_lines(new_line, map_mask, thickness, idx, type, angle_class)
     return map_mask, idx
-
+#线段转化成了掩码图像
 
 def overlap_filter(mask, filter_mask):
     C, _, _ = mask.shape
@@ -84,7 +89,7 @@ def overlap_filter(mask, filter_mask):
         mask[:c][filter] = 0
 
     return mask
-
+#过滤掩码这里不太懂有什么作用
 
 def preprocess_map(vectors, patch_size, canvas_size, num_classes, thickness, angle_class):
     confidence_levels = [-1]
@@ -121,9 +126,10 @@ def preprocess_map(vectors, patch_size, canvas_size, num_classes, thickness, ang
     instance_masks = overlap_filter(instance_masks, filter_masks)
     forward_masks = overlap_filter(forward_masks, filter_masks).sum(0).astype('int32')
     backward_masks = overlap_filter(backward_masks, filter_masks).sum(0).astype('int32')
-
-    return torch.tensor(instance_masks), torch.tensor(forward_masks), torch.tensor(backward_masks)
-
+'''函数调用line_geom_to_mask函数，将LineString对象列表转换为掩码图像，其中包括实例掩码、过滤掩码、前向掩码和后向掩码。
+实例掩码用于标记每个线段的位置，过滤掩码用于过滤掉与其他类别重叠的部分，前向掩码和后向掩码用于标记每个线段的方向。
+转换完成后，函数调用overlap_filter函数，将实例掩码、前向掩码和后向掩码与过滤掩码进行重叠过滤，得到与指定区域完全重合的部分。'''
+    return torch.tensor(instance_masks), torch.tensor(forward_masks), torch.tensor(backward_masks）
 
 def rasterize_map(vectors, patch_size, canvas_size, num_classes, thickness):
     confidence_levels = [-1]
