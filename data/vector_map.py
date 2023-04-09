@@ -6,6 +6,8 @@ from shapely.geometry import LineString, box, MultiPolygon, MultiLineString
 
 from .const import CLASS2LABEL
 
+#总的来说就是把地图中的各个元素变成向量
+
 class VectorizedLocalMap(object):
     def __init__(self,
                  dataroot,
@@ -83,6 +85,7 @@ class VectorizedLocalMap(object):
                 })
 
         return filtered_vectors
+	#从地图中获得几何元素并转化成向量形式储存
 
     def get_map_geom(self, patch_box, patch_angle, layer_names, location):
         map_geom = []
