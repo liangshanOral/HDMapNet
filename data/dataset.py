@@ -1,4 +1,4 @@
-import os
+#import os
 import numpy as np
 
 import torch
@@ -16,7 +16,7 @@ from .image import normalize_img, img_transform
 from .utils import label_onehot_encoding
 from model.voxel import pad_or_trim_to_np
 
-
+#核心就是把每张图片的信息输出，包括内外参矩阵，语义掩码等等
 class HDMapNetDataset(Dataset):
     def __init__(self, version, dataroot, data_conf, is_train):
         super(HDMapNetDataset, self).__init__()
@@ -92,6 +92,7 @@ class HDMapNetDataset(Dataset):
         resize = (fW / IMG_ORIGIN_W, fH / IMG_ORIGIN_H)
         resize_dims = (fW, fH)
         return resize, resize_dims
+        #用来resizede
 
     # def sample_augmentation(self):
     #     self.data_conf['resize_lim'] = (0.193, 0.225)
@@ -189,7 +190,10 @@ class HDMapNetSemanticDataset(HDMapNetDataset):
         direction_masks = forward_oh_masks + backward_oh_masks
         direction_masks = direction_masks / direction_masks.sum(0)
         return semantic_masks, instance_masks, forward_masks, backward_masks, direction_masks
-    #这里不是很理解具体得到decoder的三种mask的原理
+    '''vector被转化为语义分割的掩码，实例掩码指定每个像素属于哪个实例，方向掩码由前向+后向构成
+    掩码可用来训练语义分割模型
+    one-hot编码是指将一个长度为N的离散型向量表示为一个长度为N的二进制向量，该二进制向量中只有一位为1，其他位都为0。
+    方便处理，可解释
     
     def __getitem__(self, idx):
         rec = self.samples[idx]
