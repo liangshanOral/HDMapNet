@@ -43,7 +43,7 @@ def rotation_from_euler(rolls, pitchs, yaws, cuda=True):
     R[:, 2, 1] = cj * si
     R[:, 2, 2] = cj * ci
     return R
-
+#将欧拉角转化为旋转矩阵
 
 def perspective(cam_coords, proj_mat, h, w, extrinsic, offset=None):
     """
@@ -71,7 +71,7 @@ def perspective(cam_coords, proj_mat, h, w, extrinsic, offset=None):
     pix_coords = pix_coords.view(N, 2, h, w)
     pix_coords = pix_coords.permute(0, 2, 3, 1).contiguous()
     return pix_coords
-
+#将世界坐标系转化为像素坐标系-cv核心都被实践了...
 
 def bilinear_sampler(imgs, pix_coords):
     """
@@ -87,7 +87,8 @@ def bilinear_sampler(imgs, pix_coords):
     out_shape = (B, pix_h, pix_w, img_c)
 
     pix_x, pix_y = torch.split(pix_coords, 1, dim=-1)  # [B, pix_h, pix_w, 1]
-
+	#将x、y坐标分开
+    
     # Rounding
     pix_x0 = torch.floor(pix_x)
     pix_x1 = pix_x0 + 1
@@ -102,7 +103,8 @@ def bilinear_sampler(imgs, pix_coords):
     pix_y0 = torch.clip(pix_y0, 0, y_max)
     pix_x1 = torch.clip(pix_x1, 0, x_max)
     pix_y1 = torch.clip(pix_y1, 0, y_max)
-
+	#clip将张量值限制在某范围内
+    
     # Weights [B, pix_h, pix_w, 1]
     wt_x0 = pix_x1 - pix_x
     wt_x1 = pix_x - pix_x0
@@ -137,7 +139,7 @@ def bilinear_sampler(imgs, pix_coords):
     w11 = wt_x1 * wt_y1
     output = w00 * im00 + w01 * im01 + w10 * im10 + w11 * im11
     return output
-
+#双线性采样也自己写...真的无语
 
 def plane_grid(xbound, ybound, zs, yaws, rolls, pitchs, cuda=True):
     B = len(zs)
@@ -217,7 +219,6 @@ class PlaneEstimationModule(nn.Module):
         z, pitch, roll = x[:, 0], x[:, 1], x[:, 2]
         return z, pitch, roll
 
-
 class IPM(nn.Module):
     def __init__(self, xbound, ybound, N, C, z_roll_pitch=False, visual=False, extrinsic=False, cuda=True):
         super(IPM, self).__init__()
@@ -293,5 +294,5 @@ class IPM(nn.Module):
             warped_topdown = warped_topdown.permute(0, 3, 1, 2).contiguous()
             warped_topdown = warped_topdown.view(B, C, self.h, self.w)
             return warped_topdown
-
+#用来透视变换成像，但是看不太懂
 
