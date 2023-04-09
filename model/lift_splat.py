@@ -50,6 +50,10 @@ class QuickCumsum(torch.autograd.Function):
 
         return val, None, None
 
+'''liftsplat是一个常见的点云处理操作，用于将离散的点云数据映射到连续的三维网格中，或将三维网格数据投影回离散的点云形式。
+具体来说，该操作将点云中的点与网格中的元素之间建立映射关系，将点的信息投射到网格中，或者将网格中的信息插值到点云中。
+通常由两个步骤组成：把点云数据映射到网格数据（Lift）和把网格数据投影回点云数据（Splat）。
+在Lift步骤中，点云数据被映射到网格数据中，生成网格上的稀疏表示。在Splat步骤中，网格数据被投影回点云数据中，以生成点云上的密集表示。'''
 
 class LiftSplat(nn.Module):
     def __init__(self, grid_conf, data_aug_conf, outC, instance_seg, embedded_dim):
