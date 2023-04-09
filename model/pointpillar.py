@@ -4,6 +4,7 @@ import torch_scatter
 
 from .voxel import points_to_voxels
 
+#这段得到了点云数据特征
 
 class PillarBlock(nn.Module):
   def __init__(self, idims=64, dims=64, num_layers=1,
@@ -24,7 +25,7 @@ class PillarBlock(nn.Module):
   def forward(self, x):
     return self.layers(x)
 
-
+#处理3D点云
 class PointNet(nn.Module):
   def __init__(self, idims=64, odims=64):
     super(PointNet, self).__init__()
@@ -37,6 +38,7 @@ class PointNet(nn.Module):
   def forward(self, points_feature, points_mask):
     batch_size, num_points, num_dims = points_feature.shape
     points_feature = points_feature.permute(0, 2, 1)
+    #permute调整张量纬度
     mask = points_mask.view(batch_size, 1, num_points)
     return self.pointnet(points_feature) * mask
 
@@ -106,11 +108,13 @@ class PointPillar(nn.Module):
     )
     points_feature = torch.cat(
       [points, # 5
-       torch.unsqueeze(voxels['voxel_point_count'], dim=-1), # 1
-       voxels['local_points_xyz'], # 3
-       voxels['point_centroids'], # 3
-       points_xyz - voxels['voxel_centers'], # 3
-      ], dim=-1
+       torch.unsqueeze(voxels['voxel_point_count'], dim=-1), # 1 体素包含的点云数量
+       voxels['local_points_xyz'], # 3 点云数据相对于中心点的坐标
+       voxels['point_centroids'], # 3 体素中心坐标
+       points_xyz - voxels['voxel_centers'], # 3 偏移量
+      ], 
+      dim=-1
+    	#表示在最后一个维度上进行拼接
     )
     points_feature = self.pn(points_feature, voxels['points_mask'])
     voxel_feature = torch_scatter.scatter_mean(
@@ -176,6 +180,7 @@ class PointPillarEncoder(nn.Module):
     points_feature = torch.cat(
       [points, # 5
        torch.unsqueeze(voxels['voxel_point_count'], dim=-1), # 1
+      #unsqueeze用来增加维度的
        voxels['local_points_xyz'], # 3
        voxels['point_centroids'], # 3
        points_xyz - voxels['voxel_centers'], # 3
@@ -187,13 +192,17 @@ class PointPillarEncoder(nn.Module):
       torch.unsqueeze(voxels['voxel_indices'], dim=1),
       dim=2,
       dim_size=voxels['num_voxels'])
+      #平均池化得到每个体素的特征表示
     batch_size = points.size(0)
     voxel_feature = voxel_feature.view(batch_size, -1, voxels['grid_size'][0], voxels['grid_size'][1])
+    #.view()可用来改变tensor维度，不确定某个维度大小时，就用-1来让pytorch自动推断
     voxel_feature1 = self.block1(voxel_feature)
     voxel_feature2 = self.block2(voxel_feature1)
     voxel_feature3 = self.block3(voxel_feature2)
+    #逐步卷积
     voxel_feature1 = self.up1(voxel_feature1)
     voxel_feature2 = self.up2(voxel_feature2)
     voxel_feature3 = self.up3(voxel_feature3)
+    #逐步上采样
     voxel_feature = torch.cat([voxel_feature1, voxel_feature2, voxel_feature3], dim=1)
     return self.conv_out(voxel_feature).transpose(3, 2)
