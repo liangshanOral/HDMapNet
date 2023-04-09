@@ -14,7 +14,7 @@ def plane_grid_2d(xbound, ybound):
 
     coords = torch.stack([x, y], axis=0)
     return coords
-
+#生成平面网格点坐标
 
 def cam_to_pixel(points, xbound, ybound):
     new_points = torch.zeros_like(points)
@@ -32,5 +32,6 @@ def get_rot_2d(yaw):
     rot[..., 1, 0] = -sin_yaw
     rot[..., 1, 1] = cos_yaw
     return rot
+#通过旋转角度得到旋转矩阵
 
 
