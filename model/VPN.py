@@ -13,7 +13,7 @@ class TransformModule(nn.Module):
         self.mat_list = nn.ModuleList()
         for i in range(self.num_view):
             fc_transform = nn.Sequential(
-                        nn.Linear(dim * dim, dim * dim),
+                        nn.Linear(dim * dim, dim * dim)
                         nn.ReLU(),
                         nn.Linear(dim * dim, dim * dim),
                         nn.ReLU()
@@ -23,12 +23,13 @@ class TransformModule(nn.Module):
     def forward(self, x):
         # shape x: B, V, C, H, W
         x = x.view(list(x.size()[:3]) + [self.dim * self.dim,])
+        #D*D把它展成一维向量
         view_comb = self.mat_list[0](x[:, 0])
         for index in range(x.size(1))[1:]:
             view_comb += self.mat_list[index](x[:, index])
         view_comb = view_comb.view(list(view_comb.size()[:2]) + [self.dim, self.dim])
         return view_comb
-
+#将多个视角的特征融合，来获得更全面准确的场景信息
 
 class VPNModel(nn.Module):
     def __init__(self, outC, camC=64, instance_seg=True, embedded_dim=16, extrinsic=False, lidar=False, xbound=None, ybound=None, zbound=None):
@@ -47,7 +48,6 @@ class VPNModel(nn.Module):
         else:
             self.bevencode = BevEncode(inC=camC, outC=outC, instance_seg=instance_seg, embedded_dim=embedded_dim)
 
-
     def get_Ks_RTs_and_post_RTs(self, intrins, rots, trans, post_rots, post_trans):
         B, N, _, _ = intrins.shape
         Ks = torch.eye(4, device=intrins.device).view(1, 1, 4, 4).repeat(B, N, 1, 1)
@@ -62,6 +62,7 @@ class VPNModel(nn.Module):
         post_RTs = None
 
         return Ks, RTs, post_RTs
+	#用来获取相机内外参矩阵
 
     def get_cam_feats(self, x):
         """Return B x N x D x H/downsample x W/downsample x C
@@ -74,11 +75,11 @@ class VPNModel(nn.Module):
         return x
 
     def forward(self, points, points_mask, x, rots, trans, intrins, post_rots, post_trans, translation, yaw_pitch_roll):
-        x = self.get_cam_feats(x)
-        x = self.view_fusion(x)
+        x = self.get_cam_feats(x) #得到相机特征
+        x = self.view_fusion(x) #融合
         topdown = x.mean(1)
-        topdown = self.up_sampler(topdown)
+        topdown = self.up_sampler(topdown) #顶视图
         if self.lidar:
             lidar_feature = self.pp(points, points_mask)
             topdown = torch.cat([topdown, lidar_feature], dim=1)
-        return self.bevencode(topdown)
+        return self.bevencode(topdown) #最终将顶视图特征传给bevencode模块变成bev
