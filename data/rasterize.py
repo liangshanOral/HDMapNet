@@ -46,8 +46,9 @@ def mask_for_lines(lines, mask, thickness, idx, type='index', angle_class=36):
     else:
         for i in range(len(coords) - 1):
             cv2.polylines(mask, [coords[i:]], False, color=get_discrete_degree(coords[i + 1] - coords[i], angle_class=angle_class), thickness=thickness)
+            #又画线又生成掩码
     return mask, idx
-
+#得到线段坐标，再根据类型等参数绘制
 
 def line_geom_to_mask(layer_geom, confidence_levels, local_box, canvas_size, thickness, idx, type='index', angle_class=36):
     patch_x, patch_y, patch_h, patch_w = local_box
@@ -63,6 +64,7 @@ def line_geom_to_mask(layer_geom, confidence_levels, local_box, canvas_size, thi
     trans_y = -patch_y + patch_h / 2.0
 
     map_mask = np.zeros(canvas_size, np.uint8)
+#将车道线坐标映射到画布上
 
     for line in layer_geom:
         if isinstance(line, tuple):
@@ -80,7 +82,7 @@ def line_geom_to_mask(layer_geom, confidence_levels, local_box, canvas_size, thi
             else:
                 map_mask, idx = mask_for_lines(new_line, map_mask, thickness, idx, type, angle_class)
     return map_mask, idx
-#线段转化成了掩码图像
+#把一层车道线都输出了
 
 def overlap_filter(mask, filter_mask):
     C, _, _ = mask.shape
@@ -89,7 +91,7 @@ def overlap_filter(mask, filter_mask):
         mask[:c][filter] = 0
 
     return mask
-#过滤掩码这里不太懂有什么作用
+#因为多层掩码会造成重叠影响最后成图，所以需要过滤，类似透明遮罩，只保留最上层内容
 
 def preprocess_map(vectors, patch_size, canvas_size, num_classes, thickness, angle_class):
     confidence_levels = [-1]
@@ -113,6 +115,7 @@ def preprocess_map(vectors, patch_size, canvas_size, num_classes, thickness, ang
         instance_masks.append(map_mask)
         filter_mask, _ = line_geom_to_mask(vector_num_list[i], confidence_levels, local_box, canvas_size, thickness + 4, 1)
         filter_masks.append(filter_mask)
+        #只保留较宽的车道线
         forward_mask, _ = line_geom_to_mask(vector_num_list[i], confidence_levels, local_box, canvas_size, thickness, 1, type='forward', angle_class=angle_class)
         forward_masks.append(forward_mask)
         backward_mask, _ = line_geom_to_mask(vector_num_list[i], confidence_levels, local_box, canvas_size, thickness, 1, type='backward', angle_class=angle_class)
@@ -129,6 +132,7 @@ def preprocess_map(vectors, patch_size, canvas_size, num_classes, thickness, ang
 '''函数调用line_geom_to_mask函数，将LineString对象列表转换为掩码图像，其中包括实例掩码、过滤掩码、前向掩码和后向掩码。
 实例掩码用于标记每个线段的位置，过滤掩码用于过滤掉与其他类别重叠的部分，前向掩码和后向掩码用于标记每个线段的方向。
 转换完成后，函数调用overlap_filter函数，将实例掩码、前向掩码和后向掩码与过滤掩码进行重叠过滤，得到与指定区域完全重合的部分。'''
+
     return torch.tensor(instance_masks), torch.tensor(forward_masks), torch.tensor(backward_masks）
 
 def rasterize_map(vectors, patch_size, canvas_size, num_classes, thickness):
@@ -150,3 +154,4 @@ def rasterize_map(vectors, patch_size, canvas_size, num_classes, thickness):
         masks.append(map_mask)
 
     return np.stack(masks), confidence_levels
+#对矢量地图进行栅格化预处理
