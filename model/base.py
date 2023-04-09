@@ -11,7 +11,7 @@ class Up(nn.Module):
 
         self.up = nn.Upsample(scale_factor=scale_factor, mode='bilinear',
                               align_corners=True)
-
+		#上采样
         self.conv = nn.Sequential(
             nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1, bias=False),
             nn.BatchNorm2d(out_channels),
@@ -33,6 +33,7 @@ class CamEncode(nn.Module):
         self.C = C
 
         self.trunk = EfficientNet.from_pretrained("efficientnet-b0")
+        #trunk指神经网络的主要部分，这里采用已训练好的EfficientNet
         self.up1 = Up(320+112, self.C)
 
     def get_eff_depth(self, x):
@@ -74,7 +75,8 @@ class BevEncode(nn.Module):
         self.layer1 = trunk.layer1
         self.layer2 = trunk.layer2
         self.layer3 = trunk.layer3
-
+		#残差块
+        
         self.up1 = Up(64 + 256, 256, scale_factor=4)
         self.up2 = nn.Sequential(
             nn.Upsample(scale_factor=2, mode='bilinear',
