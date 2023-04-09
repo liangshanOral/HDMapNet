@@ -98,7 +98,9 @@ class BevEncode(nn.Module):
                 nn.ReLU(inplace=True),
                 nn.Conv2d(128, embedded_dim, kernel_size=1, padding=0),
             )
-
+        #嵌入向量
+		#embedding vector 将高维数据压缩到低维中，减少冗余和噪声
+        
         self.direction_pred = direction_pred
         if direction_pred:
             self.up1_direction = Up(64 + 256, 256, scale_factor=4)
@@ -110,7 +112,8 @@ class BevEncode(nn.Module):
                 nn.ReLU(inplace=True),
                 nn.Conv2d(128, direction_dim, kernel_size=1, padding=0),
             )
-
+		#方向向量
+        
     def forward(self, x):
         x = self.conv1(x)
         x = self.bn1(x)
