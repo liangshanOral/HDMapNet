@@ -17,13 +17,13 @@ from evaluation.angle_diff import calc_angle_diff
 from model import get_model
 from evaluate import onehot_encoding, eval_iou
 
-
+#问题就是，虽然理解了model，但是train里面是如何调用model的？？？
 def write_log(writer, ious, title, counter):
     writer.add_scalar(f'{title}/iou', torch.mean(ious[1:]), counter)
 
     for i, iou in enumerate(ious):
         writer.add_scalar(f'{title}/class_{i}/iou', iou, counter)
-
+#iou intersaction over union
 
 def train(args):
     if not os.path.exists(args.logdir):
@@ -83,6 +83,7 @@ def train(args):
                                                    lidar_mask.cuda(), car_trans.cuda(), yaw_pitch_roll.cuda())
 
             semantic_gt = semantic_gt.cuda().float()
+            #ground truth
             instance_gt = instance_gt.cuda()
             seg_loss = loss_fn(semantic, semantic_gt)
             if args.instance_seg:
