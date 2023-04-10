@@ -17,7 +17,8 @@ def chamfer_distance(source_pc, target_pc, threshold, cum=False, bidirectional=T
         return min((dist1 + dist2) / 2, threshold)
     else:
         return min(dist1, threshold), min(dist2, threshold)
-
+#Chamfer 距离是一种常用的点云匹配指标，用于衡量两个点云之间的距离
+#dist[i,j] 表示 source_pc 中第 i 个点和 target_pc 中第 j 个点之间的欧几里得距离
 
 def semantic_mask_chamfer_dist_cum(seg_pred, seg_label, scale_x, scale_y, threshold):
     # seg_label: N, C, H, W
