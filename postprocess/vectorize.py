@@ -35,7 +35,14 @@ def get_pred_top2_direction(direction, dim=1):
     direction = torch.stack([idx1, idx2], dim) - 1
     return direction
 
-
+'''
+函数将分割结果通过onehot_encoding()函数进行独热编码，并将其转换为NumPy数组。
+然后，对于每个类别，函数使用LaneNetPostProcessor对象对分割结果进行后处理，
+得到每个实例的掩码和坐标，并且对每个实例，函数计算置信度，并对置信度进行记录。
+然后，函数对每个实例的掩码进行NMS（非极大值抑制）处理，并且根据掩码计算车道线坐标。
+对于每个车道线，函数将其坐标按照特定的规则进行排序、连接和简化，并将其记录在simplified_coords列表中，
+同时将置信度和类别记录在confidences和line_types列表中。
+'''
 def vectorize(segmentation, embedding, direction, angle_class):
     segmentation = segmentation.softmax(0)
     embedding = embedding.cpu()
