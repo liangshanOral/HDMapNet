@@ -6,7 +6,7 @@ import torch
 from shapely import affinity
 from shapely.geometry import LineString, box
 
-
+#栅格怎么表示矢量信息呢，就要通过掩码，而为什么需要栅格呢，因为下面说的？
 def get_patch_coord(patch_box, patch_angle=0.0):
     patch_x, patch_y, patch_h, patch_w = patch_box
 
