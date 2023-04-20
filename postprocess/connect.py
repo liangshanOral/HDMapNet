@@ -83,7 +83,7 @@ def connect_by_step(coords, direction_mask, sorted_points, taken_direction, step
         taken = np.argmin(tmp)
         taken_direction[tuple(np.flip(sorted_points[-1]))][taken] = True
 
-
+#用于通过方向连接车道线上的点
 def connect_by_direction(coords, direction_mask, step=5, per_deg=10):
     sorted_points = [deepcopy(coords[random.randint(0, coords.shape[0]-1)])]
     taken_direction = np.zeros_like(direction_mask, dtype=np.bool)
