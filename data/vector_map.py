@@ -7,6 +7,7 @@ from shapely.geometry import LineString, box, MultiPolygon, MultiLineString
 from .const import CLASS2LABEL
 
 #总的来说就是把地图中的各个元素变成向量
+#主要就是读取layer信息然后得到相应对象
 
 class VectorizedLocalMap(object):
     def __init__(self,
