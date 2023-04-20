@@ -15,7 +15,7 @@ import numpy as np
 from sklearn.cluster import DBSCAN
 from sklearn.preprocessing import StandardScaler
 
-
+#用于执行形态学处理，以填充二进制分割结果中的孔洞
 def _morphological_process(image, kernel_size=5):
     """
     morphological process to fill the hole in the binary segmentation result
@@ -36,7 +36,7 @@ def _morphological_process(image, kernel_size=5):
 
     return closing
 
-
+#实现连通组件分析，以移除二进制分割结果中的小区域
 def _connect_components_analysis(image):
     """
     connect components analysis to remove the small components
@@ -50,7 +50,7 @@ def _connect_components_analysis(image):
 
     return cv2.connectedComponentsWithStats(gray_image, connectivity=8, ltype=cv2.CV_32S)
 
-
+#车道特征向量和坐标信息
 class _LaneFeat(object):
     """
 
@@ -132,7 +132,7 @@ class _LaneFeat(object):
 
         self._class_id = value
 
-
+实例分割结果进行聚类，得到车道线的掩码和坐标信息，以便于后续的车道线检测和跟踪等任务
 class _LaneNetCluster(object):
     """
      Instance segmentation result cluster
@@ -290,3 +290,4 @@ class LaneNetPostProcessor(object):
         )
 
         return mask_image, lane_coords
+#聚类的结果是一张车道线掩膜图像 mask_image，以及每条车道线的像素坐标信息 lane_coords。
